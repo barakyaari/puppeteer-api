@@ -31,7 +31,7 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // Use the researchByName route handler
-app.use('/researchByName', require('./utils/researchByName'));
+app.use('/researchbyname', require('./utils/researchByName'));
 
 // Endpoint for Google search
 app.post('/searchGoogle', async (req, res) => {
