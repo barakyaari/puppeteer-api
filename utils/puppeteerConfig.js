@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 async function launchPuppeteer() {
     const launchOptions = {
         headless: true,
-        executablePath: process.env.GOOGLE_CHROME_BIN,
+        executablePath: '/usr/bin/google-chrome-stable',  // Path to the system-installed Chrome
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
