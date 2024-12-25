@@ -87,7 +87,7 @@ process.on('unhandledRejection', (error) => {
 });
 
 // Start the server
-app.listen(port, () => {
-    log(`Server is running on port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on port ${port}`);
 });
 
