@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const googleSearch = require('./utils/googleSearch');
 const scrapeWebsite = require('./utils/scrapeWebsite');
+const researchByName = require('./utils/researchByName');
+require('dotenv').config();
 
 // Create a logs directory if it doesn't exist
 const logDir = path.join(__dirname, 'logs');
@@ -27,6 +29,9 @@ const port = process.env.PORT || 3000;
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
+
+// Use the researchByName route handler
+app.use('/researchByName', require('./utils/researchByName'));
 
 // Endpoint for Google search
 app.post('/searchGoogle', async (req, res) => {
@@ -90,4 +95,3 @@ process.on('unhandledRejection', (error) => {
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on port ${port}`);
 });
-
