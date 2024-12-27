@@ -3,9 +3,10 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 // Import the route handlers and logic from /lib
-const { initiate, callback, refresh } = require('./lib/auth');
+const { initiate, callback, refresh } = require('./lib/auth');  // Ensure these are functions
 const researchByNameLogic = require('./lib/research');
 const { getAutomatedMessages } = require('./lib/gptResponse');
+const deleteConversationByContactId = require('./lib/deleteConversationByContactId');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,9 +15,9 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // OAuth routes
-app.get('/initiate', initiate);
-app.get('/oauth/callback', callback);
-app.get('/refresh', refresh);
+app.get('/initiate', initiate);  // Pass function reference here
+app.get('/oauth/callback', callback);  // Pass function reference here
+app.get('/refresh', refresh);  // Pass function reference here
 
 // Research by Name route
 app.post('/researchByName', async (req, res) => {
@@ -38,11 +39,13 @@ app.post('/researchByName', async (req, res) => {
 // Automated Messages endpoint
 app.post('/getAutomatedMessages', getAutomatedMessages);
 
+// Delete conversation by contact ID
+app.get('/deleteConversationByContactId/:contactId', deleteConversationByContactId);
+
 // Basic health check endpoint
 app.get('/', (req, res) => {
     res.send('Welcome to the API!');
 });
-
 
 // Catch-all 404 handler for undefined routes
 app.use((req, res) => {
