@@ -55,6 +55,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-app.listen(port, () => {
-    console.log(`App listening on port ${port}!`);
+app.listen(3000, '0.0.0.0', () => {
+    console.log('App listening on port 3000 (IPv4)!');
 });
