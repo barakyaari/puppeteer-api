@@ -43,6 +43,7 @@ app.get('/', (req, res) => {
     res.send('Welcome to the API!');
 });
 
+
 // Catch-all 404 handler for undefined routes
 app.use((req, res) => {
     res.status(404).json({ error: 'Endpoint not found.' });
