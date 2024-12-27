@@ -1,28 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
-const googleSearch = require('./utils/googleSearch');
-const scrapeWebsite = require('./utils/scrapeWebsite');
-const researchByName = require('./utils/researchByName');
 require('dotenv').config();
 
-// Create a logs directory if it doesn't exist
-const logDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir);
-}
-
-// Create a write stream for logging
-const logStream = fs.createWriteStream(path.join(logDir, 'app.log'), { flags: 'a' });
-
-// Function to log messages to both console and file
-const log = (message) => {
-    const timestamp = new Date().toISOString();
-    const logMessage = `${timestamp} - ${message}`;
-    console.log(logMessage);
-    logStream.write(logMessage + '\n');
-};
+// Import the route handlers and logic from /lib
+const { initiate, callback, refresh } = require('./lib/auth');
+const researchByNameLogic = require('./lib/research');
+const { getAutomatedMessages } = require('./lib/gptResponse');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -30,68 +13,48 @@ const port = process.env.PORT || 3000;
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
 
-// Use the researchByName route handler
-app.use('/researchbyname', require('./utils/researchByName'));
+// OAuth routes
+app.get('/initiate', initiate);
+app.get('/oauth/callback', callback);
+app.get('/refresh', refresh);
 
-// Endpoint for Google search
-app.post('/searchGoogle', async (req, res) => {
-    const { query } = req.body;
+// Research by Name route
+app.post('/researchByName', async (req, res) => {
+    const { fullName } = req.body;
 
-    if (!query) {
-        log('Error: Query is required');
-        return res.status(400).json({ error: 'Query is required' });
+    if (!fullName || typeof fullName !== 'string') {
+        return res.status(400).json({ error: 'Invalid input: fullName is required and must be a string.' });
     }
 
     try {
-        log(`Performing Google search for query: ${query}`);
-        const results = await googleSearch(query);
-        log(`Successfully fetched ${results.length} results`);
-        return res.json(results);
+        const researchResult = await researchByNameLogic(fullName);
+        return res.json(researchResult);
     } catch (error) {
-        log(`Error in /searchGoogle: ${error.message}`);
-        return res.status(500).json({ error: 'Failed to perform Google search' });
+        console.error('Error in /researchByName:', error.message);
+        return res.status(500).json({ error: 'Failed to process research by name', details: error.message });
     }
 });
 
-// Endpoint for scraping website content
-app.post('/getWebsiteContent', async (req, res) => {
-    const { url } = req.body;
-
-    if (!url) {
-        log('Error: URL is required');
-        return res.status(400).json({ error: 'URL is required' });
-    }
-
-    try {
-        log(`Scraping website content for URL: ${url}`);
-        const content = await scrapeWebsite(url);
-        log(`Successfully scraped content from ${url}`);
-        return res.json({ content });
-    } catch (error) {
-        log(`Error in /getWebsiteContent: ${error.message}`);
-        return res.status(500).json({ error: 'Failed to scrape website content' });
-    }
-});
+// Automated Messages endpoint
+app.post('/getAutomatedMessages', getAutomatedMessages);
 
 // Basic health check endpoint
 app.get('/', (req, res) => {
-    log('Received a request to the root endpoint');
     res.send('Welcome to the API!');
 });
 
-// Handle all uncaught exceptions
-process.on('uncaughtException', (error) => {
-    log(`Uncaught Exception: ${error.message}`);
-    process.exit(1); // Exit the process after logging the error
+// Catch-all 404 handler for undefined routes
+app.use((req, res) => {
+    res.status(404).json({ error: 'Endpoint not found.' });
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (error) => {
-    log(`Unhandled Rejection: ${error.message}`);
-    process.exit(1); // Exit the process after logging the error
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error('Global Error:', err);
+    res.status(500).json({ error: 'Internal server error.' });
 });
 
 // Start the server
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Server is running on port ${port}`);
+app.listen(port, () => {
+    console.log(`App listening on port ${port}!`);
 });
