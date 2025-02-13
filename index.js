@@ -7,6 +7,7 @@ const { initiate, callback, refresh } = require('./lib/auth');
 const researchByNameLogic = require('./lib/research');
 const { getAutomatedMessages } = require('./lib/gptResponse');
 const deleteConversationByContactId = require('./lib/deleteConversationByContactId');
+const { sendWhatsAppMessage } = require('./lib/ghlMessageSender');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -53,18 +54,21 @@ app.post('/getAutomatedMessages', async (req, res) => {
 });
 
 // Delete conversation by contact ID
-app.get('/deleteConversationByContactId/:contactId', async (req, res) => {
-    const { contactId } = req.params;
+app.delete('/deleteConversationByContactId/:contactId', async (req, res) => {
     try {
-        logger.info(`Request received to delete conversation with contactId: ${contactId}`);
-        const result = await deleteConversationByContactId(contactId);
-        logger.info(`Successfully deleted conversation for contactId: ${contactId}`);
-        res.json(result);
+        logger.info(`Request received to delete conversations for contactId: ${req.params.contactId}`);
+
+        // Pass req and res correctly
+        await deleteConversationByContactId(req, res);
+
+        logger.info(`Successfully deleted conversations for contactId: ${req.params.contactId}`);
+        sendWhatsAppMessage('Conversation Deleted!', req.params.contactId);
     } catch (error) {
         logger.error('Error in /deleteConversationByContactId:', { message: error.message, stack: error.stack });
         res.status(500).json({ error: 'Failed to delete conversation' });
     }
 });
+
 
 // Basic health check endpoint
 app.get('/', (req, res) => {
