@@ -45,7 +45,7 @@ app.post('/getAutomatedMessages', async (req, res) => {
     try {
         logger.info('Request received for automated messages.');
         const response = await getAutomatedMessages(req, res);
-        logger.info('Automated messages response:', response);
+        logger.info('Automated messages response');
         return response;
     } catch (error) {
         logger.error('Error in /getAutomatedMessages:', { message: error.message, stack: error.stack });
